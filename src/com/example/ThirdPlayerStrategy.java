@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class FirstPlayerStrategy implements PlayerStrategy {
-
+public class ThirdPlayerStrategy {
     private List<RunMeld> runMeldCardsList = new ArrayList<>();
     private List<SetMeld> setMeldCardsList = new ArrayList<>();
     private List<Card> deadWoodCards = new ArrayList<>();
@@ -144,16 +143,16 @@ public class FirstPlayerStrategy implements PlayerStrategy {
     }
 
     /**
-     * this strategy takes card if only setMelds is not empty and that the card can be appended to a setMelds
+     * this strategy takes card if only runMelds is not empty and that the card can be appended to a runMelds
      *
      * @param card The card on the top of the discard pile or deck
      * @return true or false if this strategy takes the card
      */
     public boolean willTakeTopDiscard(Card card) {
         boolean takeCard = false;
-        if (!setMeldCardsList.isEmpty()) {
-            for (int meldIndex = 0; meldIndex < setMeldCardsList.size(); meldIndex++) {
-                if (setMeldCardsList.get(meldIndex).canAppendCard(card)) {
+        if (!runMeldCardsList.isEmpty()) {
+            for (int meldIndex = 0; meldIndex < runMeldCardsList.size(); meldIndex++) {
+                if (runMeldCardsList.get(meldIndex).canAppendCard(card)) {
                     takeCard = true;
                 }
             }
@@ -162,29 +161,29 @@ public class FirstPlayerStrategy implements PlayerStrategy {
     }
 
     /**
-     * This strategy will only append the drawn card to a setMeld if it is possible
+     * This strategy will only append the drawn card to a runMeld if it is possible
      * @param drawnCard The card the player was dealt
-     * @return The second card of the deadWoodCards
+     * @return The first card of the deadWoodCards
      */
     public Card drawAndDiscard(Card drawnCard) {
-        if (!setMeldCardsList.isEmpty()) {
+        if (!runMeldCardsList.isEmpty()) {
             if (willTakeTopDiscard(drawnCard)) {
-                for (int meldIndex = 0; meldIndex < setMeldCardsList.size(); meldIndex++) {
-                    setMeldCardsList.get(meldIndex).appendCard(drawnCard);
+                for (int meldIndex = 0; meldIndex < runMeldCardsList.size(); meldIndex++) {
+                    runMeldCardsList.get(meldIndex).appendCard(drawnCard);
                 }
             }
         }
-        return deadWoodCards.get(1);
+        return deadWoodCards.get(0);
     }
 
     /**
-     * Knock if player has some type of meld and that there are no deadwood cards
+     * Knock if player has some type of meld and some deadwood cards defined by its bounds
      *
      * @return True if the player has decided to knock
      */
     public boolean knock() {
         if (!runMeldCardsList.isEmpty() || !setMeldCardsList.isEmpty()) {
-            if (deadWoodCards.size() == 0) {
+            if (deadWoodCards.size() > 0 && deadWoodCards.size() < 10) {
                 return true;
             }
         }

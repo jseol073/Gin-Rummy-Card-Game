@@ -8,6 +8,7 @@ public class GameEngine {
     private SecondPlayerStrategy strategy2;
     public List<Card> deck = new ArrayList<>();
     private List<Card> discardPile = new ArrayList<>();
+    private static final int MAX_HAND = 10;
 
     /**
      * gives ten cards to each player and then removes those cards from the deck
@@ -17,7 +18,7 @@ public class GameEngine {
     public List<Card> giveInitialHand(List<Card> mainDeck) {
         List<Card> playersCardList = new ArrayList<>();
         Collections.shuffle(mainDeck);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < MAX_HAND; i++) {
             playersCardList.add(mainDeck.get(i));
         }
         return playersCardList;
@@ -33,7 +34,7 @@ public class GameEngine {
         boolean isDeckNotEmpty = true;
         int player1Points = 0;
         int player2Points = 0;
-        while (isDeckNotEmpty && (player1Points < 50 || player2Points < 50)) {
+        while (isDeckNotEmpty) {
             if (deck.size() <= 0) {
                 isDeckNotEmpty = false;
             }
@@ -95,11 +96,4 @@ public class GameEngine {
 
         }
     }
-
-    public void removeCardsFromDeck(List<Card> deck) {
-
-    }
-
-
-
 }

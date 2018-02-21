@@ -104,16 +104,13 @@ public class SecondPlayerStrategyTest {
             hand.add(onlyHearts.get(j));
         }
         System.out.println(hand.toString());
-        player2.playersHand = hand;
+        player2.setDeadWoodCards(deck);
         assertEquals(true, player2.removeMeldFromPlayerCard(hand));
     }
 
     @Test
-    public void receiveInitialHand() {
-    }
-
-    @Test
     public void willTakeTopDiscardTest() {
+        Card input = deck.get(0);
 
     }
 

@@ -6,47 +6,64 @@ import java.util.List;
 
 public class SecondPlayerStrategy implements PlayerStrategy {
 
-    public List<RunMeld> runMeldCardsList = new ArrayList<>();
-    public List<SetMeld> setMeldCardsList = new ArrayList<>();
-    public List<Card> playersHand = new ArrayList<>();
+    private List<RunMeld> runMeldCardsList = new ArrayList<>();
+    private List<SetMeld> setMeldCardsList = new ArrayList<>();
+    private List<Card> deadWoodCards = new ArrayList<>();
 
-    public List<SetMeld> initializeSetMeld(List<Card> hand) {
-        Collections.sort(hand);
+    public List<Card> getDeadWoodCards() {
+        return deadWoodCards;
+    }
+
+    public void setDeadWoodCards(List<Card> deadWoodCards) {
+        this.deadWoodCards = deadWoodCards;
+    }
+
+    /**
+     * takes 3 cards from the input and checks if it is a setMeld by using buildSetMeld method
+     * @param notRunMeldCards
+     * @return A list of SetMeld objects
+     */
+    public List<SetMeld> initializeSetMeld(List<Card> notRunMeldCards) {
+        Collections.sort(notRunMeldCards);
         List<List<Card>> cardsBy3List = new ArrayList<>();
         int startingIndex;
         int endingIndex = 3;
 
-        if (hand.size() > 4) {
-            for (int handIndex = 0; handIndex < hand.size(); handIndex++) {
+        if (notRunMeldCards.size() > 4) {
+            for (int handIndex = 0; handIndex < notRunMeldCards.size(); handIndex++) {
                 List<Card> cardsBy3 = new ArrayList<>();
-                if (endingIndex <= hand.size()) {
+                if (endingIndex <= notRunMeldCards.size()) {
                     for (startingIndex = handIndex; startingIndex < endingIndex; startingIndex++) {
-                        cardsBy3.add(hand.get(startingIndex));
+                        cardsBy3.add(notRunMeldCards.get(startingIndex));
                     }
                 }
                 cardsBy3List.add(cardsBy3);
                 endingIndex++;
             }
-        } else if (hand.size() == 3) {
-            cardsBy3List.add(hand);
-        } else if (hand.size() == 4) {
-            cardsBy3List.add(hand);
+        } else if (notRunMeldCards.size() == 3) {
+            cardsBy3List.add(notRunMeldCards);
+        } else if (notRunMeldCards.size() == 4) {
+            cardsBy3List.add(notRunMeldCards);
         } else {
-            return null;
+            return new ArrayList<>();
         }
-        System.out.println(cardsBy3List.toString());
         for (int i = 0; i < cardsBy3List.size(); i++) {
             if (cardsBy3List.get(i).size() >= SetMeld.MIN_CARDS && cardsBy3List.get(i).size() <= SetMeld.MAX_CARDS) {
                 if (Meld.buildSetMeld(cardsBy3List.get(i)) != null) {
                     setMeldCardsList.add(Meld.buildSetMeld(cardsBy3List.get(i)));
                     removeMeldFromPlayerCard(cardsBy3List.get(i));
-                    break;
+                    i += 2;
                 }
             }
         }
         return setMeldCardsList;
     }
 
+    /**
+     * sorts the hand to types of suit and checks if there is a runMeld in each suit
+     * @param hand, the player's initial hand
+     * @return a list of RunMeld objects
+     */
     public List<RunMeld> initializeRunMeld(List<Card> hand) {
         List<List<Card>> sameSuitList = new ArrayList<>();
         Collections.sort(hand);
@@ -78,7 +95,6 @@ public class SecondPlayerStrategy implements PlayerStrategy {
                 if (Meld.buildRunMeld(sameSuitList.get(i)) != null) {
                     runMeldCardsList.add(Meld.buildRunMeld(sameSuitList.get(i)));
                     removeMeldFromPlayerCard(sameSuitList.get(i));
-                    break;
                 }
             }
         }
@@ -89,104 +105,112 @@ public class SecondPlayerStrategy implements PlayerStrategy {
      * Helper method for initiateRunMeld and initiateSetMeld
      * for removing the cards that are part of a meld from the player's hand
      * @param meldCards
+     * @return boolean for testing to see if deadWoodCards will change
      */
     public boolean removeMeldFromPlayerCard(List<Card> meldCards) {
-        List<Card> oldPlayerHand = playersHand;
+        List<Card> oldPlayerHand = deadWoodCards;
 
         for (int i = 0; i < meldCards.size(); i++) {
-            playersHand.remove(meldCards.get(i));
+            deadWoodCards.remove(meldCards.get(i));
         }
 
-        List<Card> newPlayerHand = playersHand;
+        List<Card> newPlayerHand = deadWoodCards;
         if (oldPlayerHand.equals(newPlayerHand)) {
             return false;
         }
         return true;
     }
 
+    /**
+     * Takes the player's cards that are not sorted into a type of meld and see if those cards can be added to
+     * one of the melds that were already establised
+     * @param hand The initial hand dealt to the player
+     */
     public void receiveInitialHand(List<Card> hand) {
-        playersHand = hand;
-        runMeldCardsList = initializeRunMeld(playersHand);
-        setMeldCardsList = initializeSetMeld(playersHand);
-        if (runMeldCardsList != null || !runMeldCardsList.isEmpty()) {
-            for (int handIndex = 0; handIndex < playersHand.size(); handIndex++) {
-                if (runMeldCardsList.get(0).canAppendCard(playersHand.get(handIndex))) {
-                    runMeldCardsList.get(0).appendCard(playersHand.get(handIndex));
+        deadWoodCards = hand;
+        runMeldCardsList = initializeRunMeld(deadWoodCards);
+        setMeldCardsList = initializeSetMeld(deadWoodCards);
+        if (!runMeldCardsList.isEmpty()) {
+            for (int meldIndex = 0; meldIndex < runMeldCardsList.size(); meldIndex++) {
+                for (int handIndex = 0; handIndex < deadWoodCards.size(); handIndex++) {
+                    if (runMeldCardsList.get(meldIndex).canAppendCard(deadWoodCards.get(handIndex))) {
+                        runMeldCardsList.get(meldIndex).appendCard(deadWoodCards.get(handIndex));
+                    }
                 }
             }
         }
-        if (setMeldCardsList != null || !setMeldCardsList.isEmpty()) {
-            for (int handIndex = 0; handIndex < playersHand.size(); handIndex++) {
-                if (setMeldCardsList.get(0).canAppendCard(playersHand.get(handIndex))) {
-                    setMeldCardsList.get(0).appendCard(playersHand.get(handIndex));
+
+        if (!setMeldCardsList.isEmpty()) {
+            for (int meldIndex = 0; meldIndex < setMeldCardsList.size(); meldIndex++) {
+                for (int handIndex = 0; handIndex < deadWoodCards.size(); handIndex++) {
+                    if (setMeldCardsList.get(meldIndex).canAppendCard(deadWoodCards.get(handIndex))) {
+                        setMeldCardsList.get(meldIndex).appendCard(deadWoodCards.get(handIndex));
+                    }
                 }
             }
         }
     }
 
     /**
-     * Called by the game engine to prompt the player on whether they want to take the top card
-     * from the discard pile or from the deck.
+     * this strategy takes card if both melds are not empty and that the card can be appended to one of the melds
      *
-     * @param card The card on the top of the discard pile
-     * @return whether the user takes the card on the discard pile
+     * @param card The card on the top of the discard pile or deck
+     * @return true or false if this strategy takes the card
      */
     public boolean willTakeTopDiscard(Card card) {
         boolean takeCard = false;
-        if (runMeldCardsList != null || !runMeldCardsList.isEmpty()) {
-            if (runMeldCardsList.get(0).canAppendCard(card)) {
-                //playersHand.add(card);
-                takeCard = true;
+        if (!runMeldCardsList.isEmpty()) {
+            for (int meldIndex = 0; meldIndex < runMeldCardsList.size(); meldIndex++) {
+                if (runMeldCardsList.get(meldIndex).canAppendCard(card)) {
+                    takeCard = true;
+                }
             }
-        } else if (setMeldCardsList != null || !setMeldCardsList.isEmpty()) {
-            if (setMeldCardsList.get(0).canAppendCard(card)) {
-                //playersHand.add(card);
-                takeCard = true;
+        }
+        if (!setMeldCardsList.isEmpty()) {
+            for (int meldIndex = 0; meldIndex < setMeldCardsList.size(); meldIndex++) {
+                if (setMeldCardsList.get(meldIndex).canAppendCard(card)) {
+                    takeCard = true;
+                }
             }
         }
         return takeCard;
     }
 
     /**
-     * Called by the game engine to prompt the player to take their turn given a
-     * dealt card (and returning their card they've chosen to discard).
-     *
+     * This strategy will append the drawn card to runMeld first if it is possible
+     * If not, it will then try the same thing with setMeld
      * @param drawnCard The card the player was dealt
-     * @return The card the player has chosen to discard
+     * @return The first card of the deadWoodCards
      */
     public Card drawAndDiscard(Card drawnCard) {
-//        if (runMeldCards.canAppendCard(drawnCard)) {
-//            runMeldCards.appendCard(drawnCard);
-//            playersHand.add(drawnCard);
-//        } else if (setMeldCards.canAppendCard(drawnCard)) {
-//            setMeldCards.appendCard(drawnCard);
-//            playersHand.add(drawnCard);
-//        }
-//
-//        int meldLength = runMeldCards.getCards().length + setMeldCards.getCards().length;
-//
-//        for (int handIndex = 0; handIndex < playersHand.size(); handIndex++) {
-//            if (runMeldCards.canRemoveCard(runMeldCards.getCards()[handIndex])) {
-//                runMeldCards.removeCard(runMeldCards.getCards()[handIndex]);
-//                playersHand.remove(playersHand.get(handIndex));
-//                break;
-//            } else if (setMeldCards.canRemoveCard(setMeldCards.getCards()[handIndex])) {
-//                setMeldCards.removeCard(playersHand.get(handIndex));
-//                playersHand.remove(playersHand.get(handIndex));
-//                break;
-//            }
-//        }
-        return drawnCard;
+        if (!runMeldCardsList.isEmpty()) {
+            if (willTakeTopDiscard(drawnCard)) {
+                for (int meldIndex = 0; meldIndex < runMeldCardsList.size(); meldIndex++) {
+                    runMeldCardsList.get(meldIndex).appendCard(drawnCard);
+                }
+            }
+        } else if (!setMeldCardsList.isEmpty()) {
+            for (int meldIndex = 0; meldIndex < setMeldCardsList.size(); meldIndex++) {
+                if (willTakeTopDiscard(drawnCard)) {
+                    setMeldCardsList.get(meldIndex).appendCard(drawnCard);
+                }
+            }
+        }
+        return deadWoodCards.get(0);
     }
 
     /**
-     * Called by the game engine to prompt the player is whether they would like to
-     * knock.
+     * Knock if player has some type of meld and some deadwood cards defined by its bounds
      *
      * @return True if the player has decided to knock
      */
     public boolean knock() {
-        return true;
+        if (!runMeldCardsList.isEmpty() || !setMeldCardsList.isEmpty()) {
+            if (deadWoodCards.size() > 0 && deadWoodCards.size() < 10) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -213,16 +237,18 @@ public class SecondPlayerStrategy implements PlayerStrategy {
     }
 
     /**
-     * Called by the game engine to allow access the player's current list of Melds.
+     * Takes runMeldCardsList and setMeldCardsList and adds it to a list of Meld objects
      *
      * @return The player's list of melds.
      */
     public List<Meld> getMelds() {
-        Card[] setMeldArr = setMeldCardsList.get(0).getCards();
-        Card[] runMeldArr = runMeldCardsList.get(0).getCards();
         List<Meld> allMeld = new ArrayList<>();
-        allMeld.add(Meld.buildSetMeld(setMeldArr));
-        allMeld.add(Meld.buildRunMeld(runMeldArr));
+        for (int runIndex = 0; runIndex < runMeldCardsList.size(); runIndex++) {
+            allMeld.add(runMeldCardsList.get(runIndex));
+        }
+        for (int setIndex = 0; setIndex < setMeldCardsList.size(); setIndex++) {
+            allMeld.add(setMeldCardsList.get(setIndex));
+        }
         return allMeld;
     }
 
@@ -231,6 +257,8 @@ public class SecondPlayerStrategy implements PlayerStrategy {
      * competing it against a new opponent.
      */
     public void reset() {
-
+        runMeldCardsList.clear();
+        setMeldCardsList.clear();
+        deadWoodCards.clear();
     }
 }

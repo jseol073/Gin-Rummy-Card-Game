@@ -113,28 +113,4 @@ public class SecondPlayerStrategyTest {
         Card input = deck.get(0);
 
     }
-
-    @Test
-    public void drawAndDiscard() {
-    }
-
-    @Test
-    public void knock() {
-    }
-
-    @Test
-    public void opponentEndTurnFeedback() {
-    }
-
-    @Test
-    public void opponentEndRoundFeedback() {
-    }
-
-    @Test
-    public void getMelds() {
-    }
-
-    @Test
-    public void reset() {
-    }
 }

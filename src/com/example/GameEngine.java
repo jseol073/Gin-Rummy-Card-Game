@@ -6,7 +6,7 @@ public class GameEngine {
 
     private FirstPlayerStrategy strategy1;
     private SecondPlayerStrategy strategy2;
-    public List<Card> deck = new ArrayList<>();
+    private List<Card> deck = new ArrayList<>();
     private List<Card> discardPile = new ArrayList<>();
     private static final int MAX_HAND = 10;
 
